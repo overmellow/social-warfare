@@ -99,6 +99,7 @@ function social_warfare( $array = array() ) {
  * Add the side floating buttons to the footer if they are activated
  *
  * @since 1.4.0
+ * @since 2.3.0 | 30 MAY 2017 | Switched from functions to classes
  */
 if ( in_array( $swp_user_options['floatOption'], array( 'left', 'right' ), true ) ) {
 	add_action( 'wp_footer', 'social_warfare_side_buttons_func' );
@@ -106,7 +107,7 @@ if ( in_array( $swp_user_options['floatOption'], array( 'left', 'right' ), true 
 		$args = array(
 			'where' => 'after',
 			'devs' => true,
-			'max_buttons' => 5
+			'side_float' => true
 		);
 		$side_buttons = new social_warfare_side_buttons($args);
 	}
@@ -128,11 +129,11 @@ if ( in_array( $swp_user_options['floatOption'], array( 'left', 'right' ), true 
 function socialWarfare( $content = false, $where = 'default', $echo = true ) {
 
 	// Collect the deprecated fields and place them into an array
-	$array['content'] 	= $content;
-	$array['where'] 	= $where;
-	$array['echo'] 		= $echo;
-	$array['devs']		= true;
+	$args['content']    = $content;
+	$args['where'] 	    = $where;
+	$args['echo'] 	    = $echo;
+	$args['devs']	    = true;
 
 	// Pass the array into the new function
-	return social_warfare( $array );
+	return social_warfare( $args );
 }

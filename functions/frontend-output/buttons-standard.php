@@ -1,12 +1,13 @@
 <?php
 
 /**
- * Register and output header meta tags
+ * Create and output the html for the share buttons
  *
  * @package   SocialWarfare\Functions
  * @copyright Copyright (c) 2016, Warfare Plugins, LLC
  * @license   GPL-3.0+
  * @since     1.0.0
+ * @since 	  2.3.0 | 30 MAY 2017 | Converted to class-based OOP system
  */
 
 defined( 'WPINC' ) || die;
@@ -29,13 +30,22 @@ defined( 'WPINC' ) || die;
  * echo    : Used to print or store the variables.
  *         : ( true | false )
  *
- * @since 1.0.0
- * @since 2.3.0 Converted to class-based OOP system
+ * @since 1.0.0 | UNKNOWN     | Created
+ * @since 2.3.0 | 30 MAY 2017 | Converted to class-based OOP system
  * @access public
  * @return string $content The modified content
+ *
  */
 class social_warfare_buttons {
 
+	/**
+	 * __construct() - A function to construct our object.
+	 *
+	 * @param array $array [description]
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 *
+	 */
 	public function __construct( $array = array() ) {
 
 		/**
@@ -65,11 +75,14 @@ class social_warfare_buttons {
 	}
 
 	/**
-	 * A function to set some defaults
+	 * set_defaults() - A function to set some default parameters
+	 *
 	 * @var $array
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 *
 	 */
 	public function set_defaults() {
-
 		if ( !isset( $this->array['echo'] ) ) {
 			$this->array['echo'] = true;
 		}
@@ -81,16 +94,24 @@ class social_warfare_buttons {
 		else :
 			$this->postID = get_the_ID();
 		endif;
-		if ( !isset( $this->array['max_buttons'] ) ) {
+		if ( isset( $this->array['side_float'] ) && true == $this->array['side_float'] ) {
+			$this->array['max_buttons'] = 5;
+			$this->side_float = true;
+		} else {
 			$this->array['max_buttons'] = 999;
+			$this->side_float = false;
 		}
-
 		$this->post_type = get_post_type( $this->postID );
 	}
 
 	/**
-	 * A function to determine the correct location to place the buttons
+	 * set_location() - A function to determine the correct location to place the buttons
+	 *
 	 * @param Array $array The array of information
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 * @return $this->array['where'] will equal "above", "below", "both", or "none")
+	 *
 	 */
 	public function set_location(){
 
@@ -131,7 +152,12 @@ class social_warfare_buttons {
 	}
 
 	/**
-	 * A function to determin the location of the floating buttons
+	 * set_float_location() - A function to determin the location of the floating buttons
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 * @return $this->float_option will be set to the location where the floating buttons should appear
+	 *
 	 */
 	public function set_float_location() {
 
@@ -149,8 +175,12 @@ class social_warfare_buttons {
 	}
 
 	/**
-	 * A function to see if the buttons need output on this post or page
-	 * @return boolean
+	 * is_html_needed() - A function to see if the buttons need output on this post or page
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 * @return boolean | True if buttons need generated; False if we don't needs buttons here.
+	 *
 	 */
 	public function is_html_needed() {
 
@@ -181,8 +211,12 @@ class social_warfare_buttons {
 	}
 
 	/**
-	 * A function to generate the html for the buttons
+	 * generate_html() - A function to generate the html for the buttons
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
 	 * @return string The string of HTML for the buttons
+	 *
 	 */
 	public function generate_html() {
 
@@ -265,40 +299,77 @@ class social_warfare_buttons {
 		$this->buttons_array = apply_filters( 'swp_network_buttons' , $this->buttons_array );
 
 		$this->open_html_wrapper();
-
-		// Setup the total shares count if it's on the left
-		if ( ( $this->options['totes'] && $this->options['swTotesFormat'] == 'totesAltLeft' && $this->buttons_array['totes'] >= $this->options['minTotes'] && ! isset( $this->array['buttons'] ) || ( $this->options['swTotesFormat'] == 'totesAltLeft' && isset( $this->buttons_array['buttons'] ) && isset( $this->buttons_array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $this->options['minTotes'] ))
-		|| 	($this->options['swTotesFormat'] == 'totesAltLeft' && isset( $this->array['buttons'] ) && isset( $this->array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $options['minTotes'] ) ) :
-			++$this->buttons_array['count'];
-			$this->assets .= '<div class="nc_tweetContainer totes totesalt" data-id="' . $this->buttons_array['count'] . '" >';
-			$this->assets .= '<span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span>';
-			$this->assets .= '</div>';
-		endif;
-
+		$this->total_shares_html_left();
 		$this->sort_buttons();
-
-		// Create the Total Shares Box if it's on the right
-		if ( ( $this->options['totes'] && $this->options['swTotesFormat'] != 'totesAltLeft' && $this->buttons_array['totes'] >= $this->options['minTotes'] && ! isset( $this->buttons_array['buttons'] ) )
-		|| 	( $this->options['swTotesFormat'] != 'totesAltLeft' && isset( $this->buttons_array['buttons'] ) && isset( $this->buttons_array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $this->options['minTotes'] ) ) :
-			++$this->buttons_array['count'];
-			if ( $this->options['swTotesFormat'] == 'totes' ) :
-				$this->assets .= '<div class="nc_tweetContainer totes" data-id="' . $this->buttons_array['count'] . '" >';
-				$this->assets .= '<span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span>';
-				$this->assets .= '</div>';
-			else :
-				$this->assets .= '<div class="nc_tweetContainer totes totesalt" data-id="' . $this->buttons_array['count'] . '" >';
-				$this->assets .= '<span class="swp_count"><span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span> ' . swp_kilomega( $this->buttons_array['totes'] ) . '</span>';
-				$this->assets .= '</div>';
-			endif;
-		endif;
-
+		$this->total_shares_html_right();
 		$this->close_html_wrapper();
 
 	}
 
 	/**
-	 * A function to sort the buttons into the correct order
-	 * @return none
+	 * total_shares_html_left() - A function to add the total shares button when it's on the left
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 * @return none | Adds the HTML for the total shares button to the $this-assets string.
+	 *
+	 */
+	public function total_shares_html_left() {
+
+		if( false == $this->side_float ){
+
+			if ( ( $this->options['totes'] && $this->options['swTotesFormat'] == 'totesAltLeft' && $this->buttons_array['totes'] >= $this->options['minTotes'] && ! isset( $this->array['buttons'] ) || ( $this->options['swTotesFormat'] == 'totesAltLeft' && isset( $this->buttons_array['buttons'] ) && isset( $this->buttons_array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $this->options['minTotes'] ))
+			|| 	($this->options['swTotesFormat'] == 'totesAltLeft' && isset( $this->array['buttons'] ) && isset( $this->array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $options['minTotes'] ) ) :
+				++$this->buttons_array['count'];
+				$this->assets .= '<div class="nc_tweetContainer totes totesalt" data-id="' . $this->buttons_array['count'] . '" >';
+				$this->assets .= '<span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span>';
+				$this->assets .= '</div>';
+			endif;
+		} else {
+
+			if ( $this->options['totes'] && $this->buttons_array['totes'] >= $this->options['minTotes'] ) :
+				$this->assets .= '<div class="nc_tweetContainer totes totesalt" data-id="6" >';
+				$this->assets .= '<span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . '</span><span class="swp_label"> ' . __( 'Shares','social-warfare' ) . '</span>';
+				$this->assets .= '</div>';
+			endif;
+		}
+	}
+
+	/**
+	 * total_shares_html_right() - A function to add the total shares button when it's on the right
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 * @return none | Adds the HTML for the total shares button to the $this-assets string.
+	 *
+	 */
+	public function total_shares_html_right() {
+
+		if( false == $this->side_float ){
+
+			// Create the Total Shares Box if it's on the right
+			if ( ( $this->options['totes'] && $this->options['swTotesFormat'] != 'totesAltLeft' && $this->buttons_array['totes'] >= $this->options['minTotes'] && ! isset( $this->buttons_array['buttons'] ) )
+			|| 	( $this->options['swTotesFormat'] != 'totesAltLeft' && isset( $this->buttons_array['buttons'] ) && isset( $this->buttons_array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $this->options['minTotes'] ) ) :
+				++$this->buttons_array['count'];
+				if ( $this->options['swTotesFormat'] == 'totes' ) :
+					$this->assets .= '<div class="nc_tweetContainer totes" data-id="' . $this->buttons_array['count'] . '" >';
+					$this->assets .= '<span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span>';
+					$this->assets .= '</div>';
+				else :
+					$this->assets .= '<div class="nc_tweetContainer totes totesalt" data-id="' . $this->buttons_array['count'] . '" >';
+					$this->assets .= '<span class="swp_count"><span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span> ' . swp_kilomega( $this->buttons_array['totes'] ) . '</span>';
+					$this->assets .= '</div>';
+				endif;
+			endif;
+		}
+	}
+
+	/**
+	 * sort_buttons() - A function to sort the buttons into the correct order
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 * @return none | Adds the button HTML to the $this->assets string
 	 *
 	 */
 	public function sort_buttons() {
@@ -330,7 +401,10 @@ class social_warfare_buttons {
 	}
 
 	/**
-	 * A function to open the button's HTML wrapper
+	 * open_html_wrapper() - A function to open the button's HTML wrapper
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
 	 * @return none
 	 *
 	 */
@@ -340,7 +414,10 @@ class social_warfare_buttons {
 	}
 
 	/**
-	 * A function to close the button's HTML wrapper
+	 * close_html_wrapper() - A function to close the button's HTML wrapper
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
 	 * @return none
 	 *
 	 */
@@ -352,8 +429,12 @@ class social_warfare_buttons {
 	}
 
 	/**
-	 * A function to reset the cache timestamp when using legacy mode
+	 * legacy_cache_timestamp_reset() - A function to reset the cache timestamp when using legacy mode
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
 	 * @return none
+	 *
 	 */
 	public function legacy_cache_timestamp_reset() {
 
@@ -365,7 +446,10 @@ class social_warfare_buttons {
 	}
 
 	/**
-	 * A function to attach the button html to the post content html
+	 * attach_html_to_content() - A function to attach the button html to the post content html
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
 	 * @return string content
 	 *
 	 */

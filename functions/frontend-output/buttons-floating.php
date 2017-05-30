@@ -12,16 +12,36 @@
 
 defined( 'WPINC' ) || die;
 
+/**
+ * social_warfare_side_buttons() - A class to extend social_warfare_buttons and adapt them for the side floating version
+ *
+ * @since 2.3.0 | 30 MAY 2017 | Created
+ * @access public
+ * @param Array $array An array of parameters to manipulate the output of the buttons
+ *
+ */
 class social_warfare_side_buttons extends social_warfare_buttons {
 
+	/**
+	 * __construct() - A function to construct our object.
+	 *
+	 * @param array $array [description]
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 *
+	 */
  	public function __construct($array) {
 		wp_reset_query();
 		parent::__construct($array);
 	}
 
 	/**
-	 * A function to check if we need to create button html
-	 * @return boolean
+	 * is_html_needed() - A function to see if the buttons need output on this post or page
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
+	 * @return boolean | True if buttons need generated; False if we don't needs buttons here.
+	 *
 	 */
 	public function is_html_needed(){
 		if ( !is_singular() || get_post_status( $this->postID ) != 'publish' || get_post_meta( $this->postID , 'nc_floatLocation' , true ) == 'off' || is_home() ) :
@@ -36,7 +56,10 @@ class social_warfare_side_buttons extends social_warfare_buttons {
 	}
 
 	/**
-	 * A function to open the button's HTML wrapper
+	 * open_html_wrapper() - A function to open the button's HTML wrapper
+	 *
+	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @access public
 	 * @return none
 	 *
 	 */
