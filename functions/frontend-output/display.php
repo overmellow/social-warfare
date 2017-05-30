@@ -67,7 +67,8 @@ function social_warfare_wrapper( $content ) {
 
 	// Pass the content (in an array) into the buttons function to add the buttons
 	$array['content'] = $content;
-	$content = social_warfare_buttons( $array );
+	$social_warfare = new social_warfare_buttons( $array );
+	$content = $social_warfare->content;
 
 	// Add an invisible div to the content so the image hover pin button finds the content container area
 	if( false === is_admin() ):
@@ -86,7 +87,8 @@ function social_warfare_wrapper( $content ) {
  */
 function social_warfare( $array = array() ) {
 	$array['devs'] = true;
-	$content = social_warfare_buttons( $array );
+	$social_warfare = new social_warfare_buttons( $array );
+	$content = $social_warfare->content;
 	if( false === is_admin() ):
 		$content .= '<div class="swp-content-locator"></div>';
 	endif;
@@ -100,4 +102,29 @@ function social_warfare( $array = array() ) {
  */
 if ( in_array( $swp_user_options['floatOption'], array( 'left', 'right' ), true ) ) {
 	add_action( 'wp_footer', 'socialWarfareSideFloat' );
+}
+
+/**
+ * A wrapper for the legacy version of the function
+ *
+ * This version accepted 3 parameters, but was scrapped for a
+ * new version that now accepts an array of unlimited parameters
+ *
+ * @since  1.4.0
+ * @access public
+ * @param  boolean $content The content to which the buttons will be added
+ * @param  string  $where   Where the buttons should appear (above, below, both, none)
+ * @param  boolean $echo    Echo the content or return it
+ * @return string 			Returns the modified content
+ */
+function socialWarfare( $content = false, $where = 'default', $echo = true ) {
+
+	// Collect the deprecated fields and place them into an array
+	$array['content'] 	= $content;
+	$array['where'] 	= $where;
+	$array['echo'] 		= $echo;
+	$array['devs']		= true;
+
+	// Pass the array into the new function
+	return social_warfare( $array );
 }
