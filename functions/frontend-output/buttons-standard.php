@@ -14,7 +14,7 @@ defined( 'WPINC' ) || die;
 /**
  * THE SHARE BUTTONS FUNCTION:
  *
- * This function accepts an array of parameters resulting in the outputting of
+ * This class accepts an array of parameters resulting in the outputting of
  * the Social Warfare Buttons.
  *
  *
@@ -30,6 +30,7 @@ defined( 'WPINC' ) || die;
  *         : ( true | false )
  *
  * @since 1.0.0
+ * @since 2.3.0 Converted to class-based OOP system
  * @access public
  * @return string $content The modified content
  */
@@ -56,6 +57,7 @@ class social_warfare_buttons {
 		if( true == $this->is_html_needed() ) {
 			$this->generate_html();
 			$this->attach_html_to_content();
+			$this->legacy_cache_timestamp_reset();
 		} else {
 			$this->content = $this->array['content'];
 		}
@@ -140,6 +142,10 @@ class social_warfare_buttons {
 		endif;
 	}
 
+	/**
+	 * A function to see if the buttons need output on this post or page
+	 * @return boolean
+	 */
 	public function is_html_needed() {
 
 		// Disable the buttons on Buddy Press pages
@@ -182,9 +188,9 @@ class social_warfare_buttons {
 		endif;
 
 		if ( isset( $this->array['scale'] ) ) :
-			$scale = $this->array['scale'];
+			$this->scale = $this->array['scale'];
 		else :
-			$scale = $this->options['buttonSize'];
+			$this->scale = $this->options['buttonSize'];
 		endif;
 
 		// Fetch the share counts
@@ -284,6 +290,11 @@ class social_warfare_buttons {
 
 	}
 
+	/**
+	 * A function to sort the buttons into the correct order
+	 * @return none
+	 *
+	 */
 	public function sort_buttons() {
 		// Sort the buttons according to the user's preferences
 		if ( isset( $this->buttons_array ) && isset( $this->buttons_array['buttons'] ) ) :
@@ -308,11 +319,21 @@ class social_warfare_buttons {
 		endif;
 	}
 
+	/**
+	 * A function to open the button's HTML wrapper
+	 * @return none
+	 *
+	 */
 	public function open_html_wrapper() {
 		// Create the social panel
-		$this->assets = '<div class="nc_socialPanel swp_' . $this->options['visualTheme'] . ' swp_d_' . $this->options['dColorSet'] . ' swp_i_' . $this->options['iColorSet'] . ' swp_o_' . $this->options['oColorSet'] . ' scale-' . $scale*100 .' scale-' . $this->options['buttonFloat'] . '" data-position="' . $this->options['location_post'] . '" data-float="' . $this->float_option . '" data-count="' . $this->buttons_array['count'] . '" data-floatColor="' . $this->options['floatBgColor'] . '" data-emphasize="'.$this->options['emphasize_icons'].'">';
+		$this->assets = '<div class="nc_socialPanel swp_' . $this->options['visualTheme'] . ' swp_d_' . $this->options['dColorSet'] . ' swp_i_' . $this->options['iColorSet'] . ' swp_o_' . $this->options['oColorSet'] . ' scale-' . $this->scale*100 .' scale-' . $this->options['buttonFloat'] . '" data-position="' . $this->options['location_post'] . '" data-float="' . $this->float_option . '" data-count="' . $this->buttons_array['count'] . '" data-floatColor="' . $this->options['floatBgColor'] . '" data-emphasize="'.$this->options['emphasize_icons'].'">';
 	}
 
+	/**
+	 * A function to close the button's HTML wrapper
+	 * @return none
+	 *
+	 */
 	public function close_html_wrapper() {
 
 		// Close the Social Panel
@@ -320,7 +341,11 @@ class social_warfare_buttons {
 
 	}
 
-	public function legacy_cache_rebuild() {
+	/**
+	 * A function to reset the cache timestamp when using legacy mode
+	 * @return none
+	 */
+	public function legacy_cache_timestamp_reset() {
 
 		// Reset the cache timestamp if needed
 		if ( swp_is_cache_fresh( $this->postID ) == false  && 'legacy' === $this->options['cacheMethod'] ) :
@@ -329,7 +354,11 @@ class social_warfare_buttons {
 		endif;
 	}
 
-
+	/**
+	 * A function to attach the button html to the post content html
+	 * @return string content
+	 * 
+	 */
 	public function attach_html_to_content() {
 
 		if ( isset( $this->array['genesis'] ) ) :
@@ -347,9 +376,9 @@ class social_warfare_buttons {
 				return $this->assets;
 			elseif ( $this->array['content'] === false ) :
 				echo $this->assets;
-			elseif ( $array['where'] == 'below' ) :
+			elseif ( $this->array['where'] == 'below' ) :
 				$this->content = $array['content'] . '' . $this->assets;
-			elseif ( $array['where'] == 'above' ) :
+			elseif ( $this->array['where'] == 'above' ) :
 				$this->content = $this->assets . '' . $array['content'];
 				return $this->content;
 			elseif ( $this->array['where'] == 'both' ) :
