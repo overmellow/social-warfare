@@ -101,7 +101,15 @@ function social_warfare( $array = array() ) {
  * @since 1.4.0
  */
 if ( in_array( $swp_user_options['floatOption'], array( 'left', 'right' ), true ) ) {
-	add_action( 'wp_footer', 'socialWarfareSideFloat' );
+	add_action( 'wp_footer', 'social_warfare_side_buttons_func' );
+	function social_warfare_side_buttons_func() {
+		$args = array(
+			'where' => 'after',
+			'devs' => true,
+			'max_buttons' => 5
+		);
+		$side_buttons = new social_warfare_side_buttons($args);
+	}
 }
 
 /**

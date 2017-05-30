@@ -36,7 +36,7 @@ defined( 'WPINC' ) || die;
  */
 class social_warfare_buttons {
 
-	public function __construct( $array ) {
+	public function __construct( $array = array() ) {
 
 		/**
 		 * This is the array of arguments that can be passed
@@ -52,14 +52,15 @@ class social_warfare_buttons {
 		$this->options = $swp_user_options;
 
 		$this->set_defaults();
-		$this->set_location();
 		$this->set_float_location();
+		$this->set_location();
 		if( true == $this->is_html_needed() ) {
 			$this->generate_html();
 			$this->attach_html_to_content();
 			$this->legacy_cache_timestamp_reset();
 		} else {
 			$this->content = $this->array['content'];
+			$this->assets = '';
 		}
 	}
 
@@ -68,6 +69,7 @@ class social_warfare_buttons {
 	 * @var $array
 	 */
 	public function set_defaults() {
+
 		if ( !isset( $this->array['echo'] ) ) {
 			$this->array['echo'] = true;
 		}
@@ -79,6 +81,11 @@ class social_warfare_buttons {
 		else :
 			$this->postID = get_the_ID();
 		endif;
+		if ( !isset( $this->array['max_buttons'] ) ) {
+			$this->array['max_buttons'] = 999;
+		}
+
+		$this->post_type = get_post_type( $this->postID );
 	}
 
 	/**
@@ -129,13 +136,12 @@ class social_warfare_buttons {
 	public function set_float_location() {
 
 		// Set the options for the horizontal floating bar
-		$post_type = get_post_type( $this->postID );
-		$spec_float_where = get_post_meta( $this->postID , 'nc_floatLocation' , true );
+		$this->spec_float_where = get_post_meta( $this->postID , 'nc_floatLocation' , true );
 		if ( isset( $this->array['float'] ) && $this->array['float'] == 'ignore' ) :
 			$this->float_option = 'float_ignore';
-		elseif ( $spec_float_where == 'off' && $this->options['buttonFloat'] != 'float_ignore' ) :
+		elseif ( $this->spec_float_where == 'off' && $this->options['buttonFloat'] != 'float_ignore' ) :
 				$this->float_option = 'floatNone';
-		elseif ( $this->options['float'] && is_singular() && $this->options[ 'float_location_' . $post_type ] == 'on' ) :
+		elseif ( $this->options['float'] && is_singular() && $this->options[ 'float_location_' . $this->post_type ] == 'on' ) :
 			$this->float_option = 'float' . ucfirst( $this->options['floatOption'] );
 		else :
 			$this->float_option = 'floatNone';
@@ -297,23 +303,27 @@ class social_warfare_buttons {
 	 */
 	public function sort_buttons() {
 		// Sort the buttons according to the user's preferences
+		$i = 0;
 		if ( isset( $this->buttons_array ) && isset( $this->buttons_array['buttons'] ) ) :
 			foreach ( $this->buttons_array['buttons'] as $key => $value ) :
-				if ( isset( $this->buttons_array['resource'][ $key ] ) ) :
+				if ( isset( $this->buttons_array['resource'][ $key ] ) && $i < $this->array['max_buttons'] ) :
 					$this->assets .= $this->buttons_array['resource'][ $key ];
+					$i++;
 				endif;
 			endforeach;
 		elseif ( $this->options['orderOfIconsSelect'] == 'manual' ) :
 			foreach ( $this->options['newOrderOfIcons'] as $key => $value ) :
-				if ( isset( $this->buttons_array['resource'][ $key ] ) ) :
+				if ( isset( $this->buttons_array['resource'][ $key ] ) && $i < $this->array['max_buttons'] ) :
 					$this->assets .= $this->buttons_array['resource'][ $key ];
+					$i++;
 				endif;
 			endforeach;
 		elseif ( $this->options['orderOfIconsSelect'] == 'dynamic' ) :
 			arsort( $this->buttons_array['shares'] );
 			foreach ( $this->buttons_array['shares'] as $thisIcon => $status ) :
-				if ( isset( $this->buttons_array['resource'][ $thisIcon ] ) ) :
+				if ( isset( $this->buttons_array['resource'][ $thisIcon ] ) && $i < $this->array['max_buttons'] ) :
 					$this->assets .= $this->buttons_array['resource'][ $thisIcon ];
+					$i++;
 				endif;
 			endforeach;
 		endif;
@@ -357,7 +367,7 @@ class social_warfare_buttons {
 	/**
 	 * A function to attach the button html to the post content html
 	 * @return string content
-	 * 
+	 *
 	 */
 	public function attach_html_to_content() {
 
