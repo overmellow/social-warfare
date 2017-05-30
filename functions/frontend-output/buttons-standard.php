@@ -32,7 +32,7 @@ defined( 'WPINC' ) || die;
  *
  * @since 1.0.0 | UNKNOWN     | Created
  * @since 2.3.0 | 30 MAY 2017 | Converted to class-based OOP system
- * @access public
+ * @access protected
  * @return string $content The modified content
  *
  */
@@ -79,10 +79,10 @@ class social_warfare_buttons {
 	 *
 	 * @var $array
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 *
 	 */
-	public function set_defaults() {
+	protected function set_defaults() {
 		if ( !isset( $this->array['echo'] ) ) {
 			$this->array['echo'] = true;
 		}
@@ -109,11 +109,11 @@ class social_warfare_buttons {
 	 *
 	 * @param Array $array The array of information
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return $this->array['where'] will equal "above", "below", "both", or "none")
 	 *
 	 */
-	public function set_location(){
+	protected function set_location(){
 
 		if ( !isset( $this->array['where'] ) ) {
 			$this->array['where'] = 'default';
@@ -155,11 +155,11 @@ class social_warfare_buttons {
 	 * set_float_location() - A function to determin the location of the floating buttons
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return $this->float_option will be set to the location where the floating buttons should appear
 	 *
 	 */
-	public function set_float_location() {
+	protected function set_float_location() {
 
 		// Set the options for the horizontal floating bar
 		$this->spec_float_where = get_post_meta( $this->postID , 'nc_floatLocation' , true );
@@ -178,11 +178,11 @@ class social_warfare_buttons {
 	 * is_html_needed() - A function to see if the buttons need output on this post or page
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return boolean | True if buttons need generated; False if we don't needs buttons here.
 	 *
 	 */
-	public function is_html_needed() {
+	protected function is_html_needed() {
 
 		// Disable the buttons on Buddy Press pages
 		if ( function_exists( 'is_buddypress' ) && is_buddypress() ) :
@@ -214,11 +214,11 @@ class social_warfare_buttons {
 	 * generate_html() - A function to generate the html for the buttons
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return string The string of HTML for the buttons
 	 *
 	 */
-	public function generate_html() {
+	protected function generate_html() {
 
 		// Acquire the social stats from the networks
 		if ( isset( $this->array['url'] ) ) :
@@ -310,11 +310,11 @@ class social_warfare_buttons {
 	 * total_shares_html_left() - A function to add the total shares button when it's on the left
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return none | Adds the HTML for the total shares button to the $this-assets string.
 	 *
 	 */
-	public function total_shares_html_left() {
+	protected function total_shares_html_left() {
 
 		if( false == $this->side_float ){
 
@@ -339,11 +339,11 @@ class social_warfare_buttons {
 	 * total_shares_html_right() - A function to add the total shares button when it's on the right
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return none | Adds the HTML for the total shares button to the $this-assets string.
 	 *
 	 */
-	public function total_shares_html_right() {
+	protected function total_shares_html_right() {
 
 		if( false == $this->side_float ){
 
@@ -368,11 +368,11 @@ class social_warfare_buttons {
 	 * sort_buttons() - A function to sort the buttons into the correct order
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return none | Adds the button HTML to the $this->assets string
 	 *
 	 */
-	public function sort_buttons() {
+	protected function sort_buttons() {
 		// Sort the buttons according to the user's preferences
 		$i = 0;
 		if ( isset( $this->buttons_array ) && isset( $this->buttons_array['buttons'] ) ) :
@@ -404,11 +404,11 @@ class social_warfare_buttons {
 	 * open_html_wrapper() - A function to open the button's HTML wrapper
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return none
 	 *
 	 */
-	public function open_html_wrapper() {
+	protected function open_html_wrapper() {
 		// Create the social panel
 		$this->assets = '<div class="nc_socialPanel swp_' . $this->options['visualTheme'] . ' swp_d_' . $this->options['dColorSet'] . ' swp_i_' . $this->options['iColorSet'] . ' swp_o_' . $this->options['oColorSet'] . ' scale-' . $this->scale*100 .' scale-' . $this->options['buttonFloat'] . '" data-position="' . $this->options['location_post'] . '" data-float="' . $this->float_option . '" data-count="' . $this->buttons_array['count'] . '" data-floatColor="' . $this->options['floatBgColor'] . '" data-emphasize="'.$this->options['emphasize_icons'].'">';
 	}
@@ -417,11 +417,11 @@ class social_warfare_buttons {
 	 * close_html_wrapper() - A function to close the button's HTML wrapper
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return none
 	 *
 	 */
-	public function close_html_wrapper() {
+	protected function close_html_wrapper() {
 
 		// Close the Social Panel
 		$this->assets .= '</div>';
@@ -432,11 +432,11 @@ class social_warfare_buttons {
 	 * legacy_cache_timestamp_reset() - A function to reset the cache timestamp when using legacy mode
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return none
 	 *
 	 */
-	public function legacy_cache_timestamp_reset() {
+	protected function legacy_cache_timestamp_reset() {
 
 		// Reset the cache timestamp if needed
 		if ( swp_is_cache_fresh( $this->postID ) == false  && 'legacy' === $this->options['cacheMethod'] ) :
@@ -449,11 +449,11 @@ class social_warfare_buttons {
 	 * attach_html_to_content() - A function to attach the button html to the post content html
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return string content
 	 *
 	 */
-	public function attach_html_to_content() {
+	protected function attach_html_to_content() {
 
 		if ( isset( $this->array['genesis'] ) ) :
 			if ( $this->array['where'] == 'below' && $this->array['genesis'] == 'below' ) :

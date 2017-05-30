@@ -16,7 +16,7 @@ defined( 'WPINC' ) || die;
  * social_warfare_side_buttons() - A class to extend social_warfare_buttons and adapt them for the side floating version
  *
  * @since 2.3.0 | 30 MAY 2017 | Created
- * @access public
+ * @access protected
  * @param Array $array An array of parameters to manipulate the output of the buttons
  *
  */
@@ -39,11 +39,11 @@ class social_warfare_side_buttons extends social_warfare_buttons {
 	 * is_html_needed() - A function to see if the buttons need output on this post or page
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return boolean | True if buttons need generated; False if we don't needs buttons here.
 	 *
 	 */
-	public function is_html_needed(){
+	protected function is_html_needed(){
 		if ( !is_singular() || get_post_status( $this->postID ) != 'publish' || get_post_meta( $this->postID , 'nc_floatLocation' , true ) == 'off' || is_home() ) :
 			return false;
 		else:
@@ -59,11 +59,11 @@ class social_warfare_side_buttons extends social_warfare_buttons {
 	 * open_html_wrapper() - A function to open the button's HTML wrapper
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access public
+	 * @access protected
 	 * @return none
 	 *
 	 */
-	public function open_html_wrapper() {
+	protected function open_html_wrapper() {
 
 		if ( $this->options['floatStyleSource'] == true ) :
 			$this->options['sideDColorSet'] = $this->options['dColorSet'];
