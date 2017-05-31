@@ -55,24 +55,4 @@ class social_warfare_side_buttons extends social_warfare_buttons {
 		endif;
 	}
 
-	/**
-	 * open_html_wrapper() - A function to open the button's HTML wrapper
-	 *
-	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access protected
-	 * @return none
-	 *
-	 */
-	protected function open_html_wrapper() {
-
-		if ( $this->options['floatStyleSource'] == true ) :
-			$this->options['sideDColorSet'] = $this->options['dColorSet'];
-			$this->options['sideIColorSet'] = $this->options['iColorSet'];
-			$this->options['sideOColorSet'] = $this->options['oColorSet'];
-		endif;
-
-		// Create the social panel
-		$this->assets = '<div class="nc_socialPanelSide nc_socialPanel swp_' . $this->options['floatStyle'] . ' swp_d_' . $this->options['sideDColorSet'] . ' swp_i_' . $this->options['sideIColorSet'] . ' swp_o_' . $this->options['sideOColorSet'] . ' ' . $this->options['sideReveal'] . '" data-position="' . $this->options['location_post'] . '" data-float="' . $this->float_option . '" data-count="' . $this->buttons_array['count'] . '" data-floatColor="' . $this->options['floatBgColor'] . '" data-screen-width="' . $this->options['swp_float_scr_sz'] . '" data-transition="' . $this->options['sideReveal'] . '" data-mobileFloat="'.$this->options['floatLeftMobile'].'">';
-	}
-
 }

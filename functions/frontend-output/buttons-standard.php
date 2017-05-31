@@ -38,6 +38,8 @@ defined( 'WPINC' ) || die;
  */
 class social_warfare_buttons {
 
+	protected $assets = '';
+
 	/**
 	 * __construct() - A function to construct our object.
 	 *
@@ -70,7 +72,6 @@ class social_warfare_buttons {
 			$this->legacy_cache_timestamp_reset();
 		} else {
 			$this->content = $this->array['content'];
-			$this->assets = '';
 		}
 	}
 
@@ -83,17 +84,25 @@ class social_warfare_buttons {
 	 *
 	 */
 	protected function set_defaults() {
+
+		// Is echo manually set to true?
 		if ( !isset( $this->array['echo'] ) ) {
 			$this->array['echo'] = true;
 		}
+
+		// Has the content been passed in?
 		if ( !isset( $this->array['content'] ) ) {
 			$this->array['content'] = false;
 		}
+
+		// Do we have a post ID?
 		if ( isset( $this->array['post_id'] ) ) :
 			$this->postID = $this->array['post_id'];
 		else :
 			$this->postID = get_the_ID();
 		endif;
+
+		// Is this a side floating set of buttons?
 		if ( isset( $this->array['side_float'] ) && true == $this->array['side_float'] ) {
 			$this->array['max_buttons'] = 5;
 			$this->side_float = true;
@@ -101,6 +110,22 @@ class social_warfare_buttons {
 			$this->array['max_buttons'] = 999;
 			$this->side_float = false;
 		}
+
+		// We need a post URL.
+		if ( isset( $this->array['url'] ) ) :
+			$this->buttons_array['url'] = $this->array['url'];
+		else :
+			$this->buttons_array['url'] = get_permalink( $this->postID );
+		endif;
+
+		// We need to set a scale.
+		if ( isset( $this->array['scale'] ) ) :
+			$this->scale = $this->array['scale'];
+		else :
+			$this->scale = $this->options['buttonSize'];
+		endif;
+
+		// We need to know the post type
 		$this->post_type = get_post_type( $this->postID );
 	}
 
@@ -220,19 +245,6 @@ class social_warfare_buttons {
 	 */
 	protected function generate_html() {
 
-		// Acquire the social stats from the networks
-		if ( isset( $this->array['url'] ) ) :
-			$this->buttons_array['url'] = $this->array['url'];
-		else :
-			$this->buttons_array['url'] = get_permalink( $this->postID );
-		endif;
-
-		if ( isset( $this->array['scale'] ) ) :
-			$this->scale = $this->array['scale'];
-		else :
-			$this->scale = $this->options['buttonSize'];
-		endif;
-
 		// Fetch the share counts
 		$this->buttons_array['shares'] = get_social_warfare_shares( $this->postID );
 
@@ -290,78 +302,74 @@ class social_warfare_buttons {
 		$this->buttons_array['resource'] = array();
 		$this->buttons_array['postID'] = $this->postID;
 
-		// Disable the subtitles plugin to avoid letting them inject their subtitle into our share titles
-		if ( is_plugin_active( 'subtitles/subtitles.php' ) && class_exists( 'Subtitles' ) ) :
-			remove_filter( 'the_title', array( Subtitles::getinstance(), 'the_subtitle' ), 10, 2 );
-		endif;
+		$this->compatibility();
 
 		// This array will contain the HTML for all of the individual buttons
 		$this->buttons_array = apply_filters( 'swp_network_buttons' , $this->buttons_array );
 
-		$this->open_html_wrapper();
-		$this->total_shares_html_left();
 		$this->sort_buttons();
-		$this->total_shares_html_right();
-		$this->close_html_wrapper();
+		$this->total_shares_html();
+		$this->add_html_wrapper();
 
 	}
 
 	/**
-	 * total_shares_html_left() - A function to add the total shares button when it's on the left
+	 * total_shares_location() - A function to determine if, where, and when the total shares should be displayed.
+	 *
+	 * @since 2.3.0 | 31 MAY 2017 | Created
+	 * @access protected
+	 * @return [type] [description]
+	 */
+	protected function total_shares_location() {
+
+		if ( $this->options['totes'] && $this->options['swTotesFormat'] == 'totesAltLeft' && $this->buttons_array['totes'] >= $this->options['minTotes'] && !isset( $this->array['buttons'] ) ):
+			return 'left';
+
+		elseif($this->options['swTotesFormat'] == 'totesAltLeft' && isset( $this->buttons_array['buttons'] ) && isset( $this->buttons_array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $this->options['minTotes'] ):
+			return 'left';
+
+		elseif( $this->options['swTotesFormat'] == 'totesAltLeft' && isset( $this->array['buttons'] ) && isset( $this->array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $options['minTotes'] ) :
+			return 'left';
+
+		elseif( $this->options['totes'] && $this->options['swTotesFormat'] != 'totesAltLeft' && $this->buttons_array['totes'] >= $this->options['minTotes'] && !isset( $this->buttons_array['buttons'] ) ) :
+			return 'right';
+
+		elseif( $this->options['swTotesFormat'] != 'totesAltLeft' && isset( $this->buttons_array['buttons'] ) && isset( $this->buttons_array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $this->options['minTotes'] ) :
+			return 'right';
+
+		else:
+			return false;
+		endif;
+	}
+
+	/**
+	 * total_shares_html() - A function to add the total shares button when it's on the left
 	 *
 	 * @since 2.3.0 | 30 MAY 2017 | Created
 	 * @access protected
 	 * @return none | Adds the HTML for the total shares button to the $this-assets string.
 	 *
 	 */
-	protected function total_shares_html_left() {
+	protected function total_shares_html() {
 
-		if( false == $this->side_float ){
+		if( true == $this->side_float ):
 
-			if ( ( $this->options['totes'] && $this->options['swTotesFormat'] == 'totesAltLeft' && $this->buttons_array['totes'] >= $this->options['minTotes'] && ! isset( $this->array['buttons'] ) || ( $this->options['swTotesFormat'] == 'totesAltLeft' && isset( $this->buttons_array['buttons'] ) && isset( $this->buttons_array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $this->options['minTotes'] ))
-			|| 	($this->options['swTotesFormat'] == 'totesAltLeft' && isset( $this->array['buttons'] ) && isset( $this->array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $options['minTotes'] ) ) :
+			$totes_html = '<div class="nc_tweetContainer totes totesalt" data-id="6" ><span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . '</span><span class="swp_label"> ' . __( 'Shares','social-warfare' ) . '</span></div>';
+			$this->assets = $totes_html . $this->assets;
+
+		elseif( 'left' == $this->total_shares_location() || 'right' == $this->total_shares_location() ):
 				++$this->buttons_array['count'];
-				$this->assets .= '<div class="nc_tweetContainer totes totesalt" data-id="' . $this->buttons_array['count'] . '" >';
-				$this->assets .= '<span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span>';
-				$this->assets .= '</div>';
-			endif;
-		} else {
+				$totes_html = '<div class="nc_tweetContainer totes totesalt" data-id="' . $this->buttons_array['count'] . '" ><span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span></div>';
 
-			if ( $this->options['totes'] && $this->buttons_array['totes'] >= $this->options['minTotes'] ) :
-				$this->assets .= '<div class="nc_tweetContainer totes totesalt" data-id="6" >';
-				$this->assets .= '<span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . '</span><span class="swp_label"> ' . __( 'Shares','social-warfare' ) . '</span>';
-				$this->assets .= '</div>';
-			endif;
-		}
-	}
+				if( 'left' == $this->total_shares_location() ):
+					$this->assets = $totes_html . $this->assets;
 
-	/**
-	 * total_shares_html_right() - A function to add the total shares button when it's on the right
-	 *
-	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access protected
-	 * @return none | Adds the HTML for the total shares button to the $this-assets string.
-	 *
-	 */
-	protected function total_shares_html_right() {
+				elseif( 'right' == $this->total_shares_location() ):
+					$this->assets .= $totes_html;
 
-		if( false == $this->side_float ){
-
-			// Create the Total Shares Box if it's on the right
-			if ( ( $this->options['totes'] && $this->options['swTotesFormat'] != 'totesAltLeft' && $this->buttons_array['totes'] >= $this->options['minTotes'] && ! isset( $this->buttons_array['buttons'] ) )
-			|| 	( $this->options['swTotesFormat'] != 'totesAltLeft' && isset( $this->buttons_array['buttons'] ) && isset( $this->buttons_array['buttons']['totes'] ) && $this->buttons_array['totes'] >= $this->options['minTotes'] ) ) :
-				++$this->buttons_array['count'];
-				if ( $this->options['swTotesFormat'] == 'totes' ) :
-					$this->assets .= '<div class="nc_tweetContainer totes" data-id="' . $this->buttons_array['count'] . '" >';
-					$this->assets .= '<span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span>';
-					$this->assets .= '</div>';
-				else :
-					$this->assets .= '<div class="nc_tweetContainer totes totesalt" data-id="' . $this->buttons_array['count'] . '" >';
-					$this->assets .= '<span class="swp_count"><span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span> ' . swp_kilomega( $this->buttons_array['totes'] ) . '</span>';
-					$this->assets .= '</div>';
 				endif;
-			endif;
-		}
+
+		endif;
 	}
 
 	/**
@@ -401,30 +409,34 @@ class social_warfare_buttons {
 	}
 
 	/**
-	 * open_html_wrapper() - A function to open the button's HTML wrapper
+	 * add_html_wrapper() - A function to add the social panel HTML wrapper around the buttons
 	 *
-	 * @since 2.3.0 | 30 MAY 2017 | Created
+	 * @since 2.3.0 | 31 MAY 2017 | Created
 	 * @access protected
 	 * @return none
 	 *
 	 */
-	protected function open_html_wrapper() {
-		// Create the social panel
-		$this->assets = '<div class="nc_socialPanel swp_' . $this->options['visualTheme'] . ' swp_d_' . $this->options['dColorSet'] . ' swp_i_' . $this->options['iColorSet'] . ' swp_o_' . $this->options['oColorSet'] . ' scale-' . $this->scale*100 .' scale-' . $this->options['buttonFloat'] . '" data-position="' . $this->options['location_post'] . '" data-float="' . $this->float_option . '" data-count="' . $this->buttons_array['count'] . '" data-floatColor="' . $this->options['floatBgColor'] . '" data-emphasize="'.$this->options['emphasize_icons'].'">';
-	}
+	protected function add_html_wrapper() {
 
-	/**
-	 * close_html_wrapper() - A function to close the button's HTML wrapper
-	 *
-	 * @since 2.3.0 | 30 MAY 2017 | Created
-	 * @access protected
-	 * @return none
-	 *
-	 */
-	protected function close_html_wrapper() {
+		// The social panel container opening
+		if( true == $this->side_float ):
 
-		// Close the Social Panel
-		$this->assets .= '</div>';
+			if ( $this->options['floatStyleSource'] == true ) :
+				$this->options['sideDColorSet'] = $this->options['dColorSet'];
+				$this->options['sideIColorSet'] = $this->options['iColorSet'];
+				$this->options['sideOColorSet'] = $this->options['oColorSet'];
+			endif;
+
+			// Create the social panel
+			$wrapper_opening = '<div class="nc_socialPanelSide nc_socialPanel swp_' . $this->options['floatStyle'] . ' swp_d_' . $this->options['sideDColorSet'] . ' swp_i_' . $this->options['sideIColorSet'] . ' swp_o_' . $this->options['sideOColorSet'] . ' ' . $this->options['sideReveal'] . '" data-position="' . $this->options['location_post'] . '" data-float="' . $this->float_option . '" data-count="' . $this->buttons_array['count'] . '" data-floatColor="' . $this->options['floatBgColor'] . '" data-screen-width="' . $this->options['swp_float_scr_sz'] . '" data-transition="' . $this->options['sideReveal'] . '" data-mobileFloat="'.$this->options['floatLeftMobile'].'">';
+		else:
+			$wrapper_opening = '<div class="nc_socialPanel swp_' . $this->options['visualTheme'] . ' swp_d_' . $this->options['dColorSet'] . ' swp_i_' . $this->options['iColorSet'] . ' swp_o_' . $this->options['oColorSet'] . ' scale-' . $this->scale*100 .' scale-' . $this->options['buttonFloat'] . '" data-position="' . $this->options['location_post'] . '" data-float="' . $this->float_option . '" data-count="' . $this->buttons_array['count'] . '" data-floatColor="' . $this->options['floatBgColor'] . '" data-emphasize="'.$this->options['emphasize_icons'].'">';
+		endif;
+		// Create the social panel container closing
+		$wrapper_closing = '</div>';
+
+		// Attach the wrapper container around the buttons html
+		$this->assets = $wrapper_opening . $this->assets . $wrapper_closing;
 
 	}
 
@@ -483,4 +495,21 @@ class social_warfare_buttons {
 			endif;
 		endif;
 	}
+
+	/**
+	 * compatibility() - A function to ensure compatibility with the subtitles plugin
+	 *
+	 * @since 2.3.0 | 31 MAY 2017 | Created
+	 * @access protected
+	 * @return none
+	 *
+	 */
+	protected function compatibility() {
+
+		// Disable the subtitles plugin to avoid letting them inject their subtitle into our share titles
+		if ( is_plugin_active( 'subtitles/subtitles.php' ) && class_exists( 'Subtitles' ) ) :
+			remove_filter( 'the_title', array( Subtitles::getinstance(), 'the_subtitle' ), 10, 2 );
+		endif;
+	}
+
 }
