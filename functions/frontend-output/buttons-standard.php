@@ -82,7 +82,7 @@ class social_warfare_buttons {
 	 * @access public
 	 * @param  array $array An array of parameters that the user can add with the shortcodes
 	 * @return string The html of a panel of buttons
-	 * 
+	 *
 	 */
 	public static function shortcode($array) {
 
@@ -130,9 +130,9 @@ class social_warfare_buttons {
 
 		// Do we have a post ID?
 		if ( isset( $this->array['post_id'] ) ) :
-			$this->postID = $this->array['post_id'];
+			$this->post_id = $this->array['post_id'];
 		else :
-			$this->postID = get_the_ID();
+			$this->post_id = get_the_ID();
 		endif;
 
 		// Is this a side floating set of buttons?
@@ -148,7 +148,7 @@ class social_warfare_buttons {
 		if ( isset( $this->array['url'] ) ) :
 			$this->buttons_array['url'] = $this->array['url'];
 		else :
-			$this->buttons_array['url'] = get_permalink( $this->postID );
+			$this->buttons_array['url'] = get_permalink( $this->post_id );
 		endif;
 
 		// We need to set a scale.
@@ -159,7 +159,7 @@ class social_warfare_buttons {
 		endif;
 
 		// We need to know the post type
-		$this->post_type = get_post_type( $this->postID );
+		$this->post_type = get_post_type( $this->post_id );
 	}
 
 	/**
@@ -178,7 +178,7 @@ class social_warfare_buttons {
 		}
 
 		// Check to see if display location was specifically defined for this post
-		$specWhere = get_post_meta( $this->postID , 'nc_postLocation' , true );
+		$specWhere = get_post_meta( $this->post_id , 'nc_postLocation' , true );
 		if ( false == $specWhere ) {
 			$specWhere = 'default';
 		};
@@ -192,7 +192,7 @@ class social_warfare_buttons {
 			// If we are on a singular page
 			elseif ( is_singular() && ! is_home() && ! is_archive() && ! is_front_page() ) :
 				if ( $specWhere == 'default' || $specWhere == '' ) :
-					$postType = get_post_type( $this->postID );
+					$postType = get_post_type( $this->post_id );
 					if ( isset( $this->options[ 'location_' . $postType ] ) ) :
 						$this->array['where'] = $this->options[ 'location_' . $postType ];
 					else :
@@ -220,7 +220,7 @@ class social_warfare_buttons {
 	protected function set_float_location() {
 
 		// Set the options for the horizontal floating bar
-		$this->spec_float_where = get_post_meta( $this->postID , 'nc_floatLocation' , true );
+		$this->spec_float_where = get_post_meta( $this->post_id , 'nc_floatLocation' , true );
 		if ( isset( $this->array['float'] ) && $this->array['float'] == 'ignore' ) :
 			$this->float_option = 'float_ignore';
 		elseif ( $this->spec_float_where == 'off' && $this->options['buttonFloat'] != 'float_ignore' ) :
@@ -242,8 +242,14 @@ class social_warfare_buttons {
 	 */
 	protected function is_html_needed() {
 
+		global $swp_already_print;
+
+		// Ensure it's not an embedded post
+		if(true === is_singular() && $this->post_id != get_queried_object_id()):
+			return false;
+
 		// Disable the buttons on Buddy Press pages
-		if ( function_exists( 'is_buddypress' ) && is_buddypress() ) :
+		elseif ( function_exists( 'is_buddypress' ) && is_buddypress() ) :
 			return false;
 
 		// Disable the buttons if the location is set to "None / Manual"
@@ -259,7 +265,11 @@ class social_warfare_buttons {
 			return false;
 
 		// Disable the plugin on feeds, search results, and non-published content
-		elseif ( is_feed() || is_search() || get_post_status( $this->postID ) != 'publish' ):
+		elseif ( is_feed() || is_search() || get_post_status( $this->post_id ) != 'publish' ):
+			return false;
+
+		// Check if it's already been processed
+		elseif( in_array( $this->post_id, $swp_already_print ) ):
 			return false;
 
 		// If all the checks pass, let's make us some buttons!
@@ -279,7 +289,7 @@ class social_warfare_buttons {
 	protected function generate_html() {
 
 		// Fetch the share counts
-		$this->buttons_array['shares'] = get_social_warfare_shares( $this->postID );
+		$this->buttons_array['shares'] = get_social_warfare_shares( $this->post_id );
 
 		// Pass the swp_options into the array so we can pass it into the filter
 		$this->buttons_array['options'] = $this->options;
@@ -335,7 +345,7 @@ class social_warfare_buttons {
 			++$this->buttons_array['count'];
 		endif;
 		$this->buttons_array['resource'] = array();
-		$this->buttons_array['postID'] = $this->postID;
+		$this->buttons_array['postID'] = $this->post_id;
 
 		$this->compatibility();
 
@@ -486,9 +496,9 @@ class social_warfare_buttons {
 	protected function legacy_cache_timestamp_reset() {
 
 		// Reset the cache timestamp if needed
-		if ( swp_is_cache_fresh( $this->postID ) == false  && 'legacy' === $this->options['cacheMethod'] ) :
-			delete_post_meta( $this->postID , 'swp_cache_timestamp' );
-			update_post_meta( $this->postID , 'swp_cache_timestamp' , floor( ((date( 'U' ) / 60) / 60) ) );
+		if ( swp_is_cache_fresh( $this->post_id ) == false  && 'legacy' === $this->options['cacheMethod'] ) :
+			delete_post_meta( $this->post_id , 'swp_cache_timestamp' );
+			update_post_meta( $this->post_id , 'swp_cache_timestamp' , floor( ((date( 'U' ) / 60) / 60) ) );
 		endif;
 	}
 

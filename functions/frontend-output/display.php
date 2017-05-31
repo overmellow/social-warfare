@@ -6,12 +6,14 @@
  * @copyright Copyright (c) 2016, Warfare Plugins, LLC
  * @license   GPL-3.0+
  * @since     1.0.0
+ *
  */
 
 /**
  * A global for storing post ID's to prevent duplicate processing on the same posts
  * @since 2.1.4
  * @var array $swp_already_print Array of post ID's that have been processed during this pageload.
+ *
  */
 global $swp_already_print;
 $swp_already_print = array();
@@ -22,6 +24,7 @@ $swp_already_print = array();
  * @since 2.1.4
  * @param none
  * @return none
+ *
  */
 function swp_activate_buttons() {
 
@@ -48,22 +51,9 @@ add_action('template_redirect', 'swp_activate_buttons');
  * @since  1.0.0
  * @param  string $content The content.
  * @return String $content The modified content
+ *
  */
 function social_warfare_wrapper( $content ) {
-
-	// Fetch our global variables to ensure we haven't already processed this post
-	global $post, $swp_already_print;
-	$post_id = $post->ID;
-
-	// Check if it's already been processed
-	if( in_array( $post_id, $swp_already_print) ){
-		return $content;
-	}
-
-	// Ensure it's not an embedded post
-	if(true === is_singular() && $post_id != get_queried_object_id()) {
-		return $content;
-	}
 
 	// Pass the content (in an array) into the buttons function to add the buttons
 	$array['content'] = $content;

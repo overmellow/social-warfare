@@ -44,7 +44,7 @@ class social_warfare_side_buttons extends social_warfare_buttons {
 	 *
 	 */
 	protected function is_html_needed(){
-		if ( !is_singular() || get_post_status( $this->postID ) != 'publish' || get_post_meta( $this->postID , 'nc_floatLocation' , true ) == 'off' || is_home() ) :
+		if ( !is_singular() || get_post_status( $this->post_id ) != 'publish' || get_post_meta( $this->post_id , 'nc_floatLocation' , true ) == 'off' || is_home() ) :
 			return false;
 		else:
 			if ( isset( $this->options[ 'float_location_' . $this->post_type ] ) ) :
