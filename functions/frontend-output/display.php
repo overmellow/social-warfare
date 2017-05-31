@@ -19,7 +19,7 @@ global $swp_already_print;
 $swp_already_print = array();
 
 /**
- * A function to add the buttons
+ * swp_activate_buttons() - A function to add the buttons
  *
  * @since 2.1.4
  * @param none
@@ -46,7 +46,7 @@ add_action('template_redirect', 'swp_activate_buttons');
 
 
 /**
- * A wrapper function for adding the buttons the content or excerpt.
+ * social_warfare_wrapper() - A wrapper function for adding the buttons the content or excerpt.
  *
  * @since  1.0.0
  * @param  string $content The content.
@@ -69,11 +69,12 @@ function social_warfare_wrapper( $content ) {
 }
 
 /**
- * The main social_warfare function used to create the buttons.
+ * social_warfare() - The main social_warfare function used to create the buttons.
  *
  * @since  1.4.0
  * @param  array $array An array of options and information to pass into the buttons function.
  * @return string $content The modified content
+ *
  */
 function social_warfare( $array = array() ) {
 	$array['devs'] = true;
@@ -90,6 +91,7 @@ function social_warfare( $array = array() ) {
  *
  * @since 1.4.0
  * @since 2.3.0 | 30 MAY 2017 | Switched from functions to classes
+ *
  */
 if ( in_array( $swp_user_options['floatOption'], array( 'left', 'right' ), true ) ) {
 	add_action( 'wp_footer', 'social_warfare_side_buttons_func' );
@@ -104,7 +106,7 @@ if ( in_array( $swp_user_options['floatOption'], array( 'left', 'right' ), true 
 }
 
 /**
- * A wrapper for the legacy version of the function
+ * socialWarfare() - A wrapper for the legacy version of the function
  *
  * This version accepted 3 parameters, but was scrapped for a
  * new version that now accepts an array of unlimited parameters
@@ -115,6 +117,7 @@ if ( in_array( $swp_user_options['floatOption'], array( 'left', 'right' ), true 
  * @param  string  $where   Where the buttons should appear (above, below, both, none)
  * @param  boolean $echo    Echo the content or return it
  * @return string 			Returns the modified content
+ *
  */
 function socialWarfare( $content = false, $where = 'default', $echo = true ) {
 
