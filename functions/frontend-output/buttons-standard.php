@@ -76,6 +76,39 @@ class social_warfare_buttons {
 	}
 
 	/**
+	 * shortcode() - A function to convert shortcodes into usable buttons
+	 *
+	 * @since 2.3.0 | 31 MAY 2017 | Created
+	 * @access public
+	 * @param  array $array An array of parameters that the user can add with the shortcodes
+	 * @return string The html of a panel of buttons
+	 * 
+	 */
+	public static function shortcode($array) {
+
+		// Set the "where" parameter
+		if ( !isset( $array['where'] ) ) {
+			$array['where'] = 'after';
+		}
+
+		// Set the "echo" parameter
+		if ( !isset( $array['echo'] ) ) {
+			$array['echo'] = false;
+		}
+
+		// Set the "content" parameter
+		if ( !isset( $array['content'] ) ) {
+			$array['content'] = false;
+		}
+		$array['shortcode'] = true;
+		$array['devs'] = true;
+
+		$social_warfare = new social_warfare_buttons($array);
+		return $social_warfare->assets;
+
+	}
+
+	/**
 	 * set_defaults() - A function to set some default parameters
 	 *
 	 * @var $array
@@ -288,7 +321,9 @@ class social_warfare_buttons {
 			endforeach;
 
 			// Manually turn the total shares on or off
-			if ( array_search( 'Total',$button_set_array ) ) { $this->buttons_array['buttons']['totes'] = 'Total' ;}
+			if ( array_search( 'Total',$button_set_array ) ) {
+				$this->buttons_array['buttons']['totes'] = 'Total' ;
+			}
 
 		endif;
 
@@ -352,7 +387,7 @@ class social_warfare_buttons {
 	 */
 	protected function total_shares_html() {
 
-		if( true == $this->side_float ):
+		if( true == $this->side_float && $this->buttons_array['totes'] >= $this->options['minTotes'] ):
 
 			$totes_html = '<div class="nc_tweetContainer totes totesalt" data-id="6" ><span class="swp_count">' . swp_kilomega( $this->buttons_array['totes'] ) . '</span><span class="swp_label"> ' . __( 'Shares','social-warfare' ) . '</span></div>';
 			$this->assets = $totes_html . $this->assets;

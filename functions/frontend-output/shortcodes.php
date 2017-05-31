@@ -6,20 +6,8 @@
  *                                                                *
  ******************************************************************/
 
-function socialWarfareShortcode( $atts ) {
-	return socialWarfare( false,'after',false );
-}
-function social_warfareShortcode( $array ) {
-	if ( ! isset( $array['where'] ) ) { $array['where'] = 'after'; }
-	if ( ! isset( $array['echo'] ) ) { $array['echo'] = false; }
-	if ( ! isset( $array['content'] ) ) { $array['content'] = false; }
-	$array['shortcode'] = true;
-	$array['devs'] = true;
-	return social_warfare( $array );
-}
-
-add_shortcode( 'socialWarfare', 'socialWarfareShortcode' );
-add_shortcode( 'social_warfare', 'social_warfareShortcode' );
+add_shortcode( 'socialWarfare', 'social_warfare_buttons::shortcode' );
+add_shortcode( 'social_warfare', 'social_warfare_buttons::shortcode' );
 
 /**
 
