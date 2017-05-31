@@ -318,7 +318,7 @@ class social_warfare_buttons {
 	 *
 	 * @since 2.3.0 | 31 MAY 2017 | Created
 	 * @access protected
-	 * @return [type] [description]
+	 * @return string The location where the total shares should be added to the social panel
 	 */
 	protected function total_shares_location() {
 
