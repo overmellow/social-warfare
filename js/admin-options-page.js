@@ -66,7 +66,7 @@
 	/*********************************************************
 		A function to show/hide conditionals
 	*********************************************************/
-	function conditionalFields() {
+	function conditionalFields_deprecated() {
 		// Loop through all the fields that have dependancies
 		$( 'div[dep]' ).each( function() {
 			// Fetch the conditional values
@@ -97,13 +97,7 @@
 		}
 	}
 
-	function swp_select_val(name) {
-		return $('select[name="' + name + '"]').val();
-	}
 
-	function swp_check_val(name) {
-		return $( '[name="' + name + '"]' ).prop( 'checked' );
-	}
 
 	/*********************************************************
 		Header Menu

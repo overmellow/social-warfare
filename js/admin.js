@@ -1,5 +1,47 @@
 var socialWarfareAdmin = socialWarfareAdmin || {};
 
+//  Load this globally
+function conditionalFields() {
+	function swp_select_val(name) {
+		return $('select[name="' + name + '"]').val();
+	}
+
+	function swp_check_val(name) {
+		return $( '[name="' + name + '"]' ).prop( 'checked' );
+	}
+
+	console.log("conditionalFields()");
+	// Loop through all the fields that have dependancies
+	$( '[dep]' ).each( function(idx, el) {
+		console.log(el);
+		// Fetch the conditional values
+		var conDep = $( this ).attr( 'dep' );
+
+		var conDepVal = $.parseJSON( $( this ).attr( 'dep_val' ) );
+		var value;
+
+		// Fetch the value of checkboxes or other input types
+		if ( $( '[name="' + conDep + '"]' ).attr( 'type' ) == 'checkbox' ) {
+			value = $( '[name="' + conDep + '"]' ).prop( 'checked' );
+		} else {
+			value = $( '[name="' + conDep + '"]' ).val();
+		}
+
+		// Show or hide based on the conditional values (and the dependancy must be visible in case it is dependant)
+		if ( $.inArray( value, conDepVal ) !== -1 && $( '[name="' + conDep + '"]' ).parent( '.sw-grid' ).is( ':visible' ) ) {
+			$( this ).show();
+		} else {
+			$( this ).hide();
+		}
+	});
+
+	if ( swp_check_val('floatStyleSource') == false && (swp_select_val('sideDColorSet') == 'customColor' || swp_select_val('sideDColorSet') == 'ccOutlines' || swp_select_val('sideIColorSet') == 'customColor' || swp_select_val('sideIColorSet') == 'ccOutlines' || swp_select_val('sideOColorSet') == 'customColor' || swp_select_val('sideOColorSet') == 'ccOutlines') ) {
+		$( '.sideCustomColor_wrapper' ).slideDown();
+	} else {
+		$( '.sideCustomColor_wrapper' ).slideUp();
+	}
+}
+
 (function( window, $, undefined ) {
 	'use strict';
 
@@ -73,16 +115,18 @@ var socialWarfareAdmin = socialWarfareAdmin || {};
 		$( '#socialWarfare .nc_customTweetWrapper .counterNumber' ).html( remaining );
 	}
 
-	function toggleCustomThumbnailFields( show = true) {
-		console.log("toggleCustomThumbnailFields()");
-		console.log(show);
-		if (show) {
-			$(".custom_thumb_size").show();
-		}
-        else {
-        	$(".custom_thumb_size").hide();
-        }
-	}
+	// function toggleCustomThumbnailFields_deprecated( show = true) {
+	// 	console.log("toggleCustomThumbnailFields()");
+	// 	console.log(show);
+	// 	if (show) {
+	// 		$(".custom_thumb_size").show();
+	// 	}
+ //        else {
+ //        	$(".custom_thumb_size").hide();
+ //        }
+	// }
+
+
 
 	$( document ).ready( function() {
 		if ( $( '#socialWarfare.postbox' ).length ) {
@@ -215,20 +259,24 @@ var socialWarfareAdmin = socialWarfareAdmin || {};
 			}
 		}
 
-		var customThumbailSelect = $("#widget-swp_popular_posts_widget-2-thumb_size");
-		console.log(customThumbailSelect);
-		console.log(customThumbailSelect.value);
+		conditionalFields();
 
-		if (customThumbailSelect.value === 'custom') {
-			toggleCustomThumbnailFields();
-		}
 
-		$(customThumbailSelect).on("change", function(e) {
-            if (e.target.value === 'custom') {
-            	toggleCustomThumbnailFields();
-            } else {
-            	toggleCustomThumbnailFields(false);
-            }
-		});
+	// 	var customThumbailSelect = $("#widget-swp_popular_posts_widget-2-thumb_size");
+	// 	console.log(customThumbailSelect);
+	// 	console.log(customThumbailSelect.value);
+
+	// 	if (customThumbailSelect.value === 'custom') {
+	// 		toggleCustomThumbnailFields();
+	// 	}
+
+	// 	$(customThumbailSelect).on("change", function(e) {
+ //            if (e.target.value === 'custom') {
+ //            	toggleCustomThumbnailFields();
+ //            } else {
+ //            	toggleCustomThumbnailFields(false);
+ //            }
+	// 	});
 	});
+
 })( this, jQuery );
