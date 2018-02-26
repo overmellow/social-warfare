@@ -10,15 +10,77 @@
  */
 
 class SWP_Buttons_Panel {
-    public $options;
+    public $data;
 
-    public function __construct() {
+    public function __construct( $data ) {
         // *$this->options can not be set to $swp_user_options yet
         // *as the options are not defined at this point.
+
+        if ( !is_array( $data ) ) {
+    		$data = array();
+    	}
+
+        $defaults = array(
+            'where'     => 'default',
+            'echo'      => true,
+            'content'   => false,
+        );
+
+        if ( !isset($data['where'] ) {
+            $data['where'] = $this->set_where();
+        }
+
+        $this->data = array_merge( $defaults, $data );
+        $this->post_id = isset( $data['postID'] ) ? $data['postID'] : get_the_ID();
+        $this->post_type = get_post_type( $this->post_id );
+
+        // *Set specifications based on user settings or default values.
+
+        $this->specifications = array(
+            'main'  => array(
+                'where' => $main_where,
+            ),
+            'float' => array(
+                'where'  =>
+            ),
+        );
+
+    }
+
+    private function set_where( $where ) {
+        if( is_front_page() ):
+            $where  = $this->options['locationHome'];
+
+        elseif ( is_singular() && !is_home() && !is_archive() ) :
+
+            // Check to see if display location was specifically defined for this post
+            $spec_where = get_post_meta( $post_id, 'nc_postLocation', true );
+
+            if ( !$spec_where ) {
+                $spec_where = 'default';
+            };
+
+            if ( $spec_where == 'default' || $spec_where == '' ) :
+                if ( isset( $this->options[ 'location_' . $post_type ] ) ) :
+                    $where  = $this->options[ 'location_' . $this->post_type ];
+                else :
+                    $where  = 'none';
+                endif;
+            else :
+                $where  = $spec_where;
+            endif;
+
+        // If we are anywhere else besides the home page, front page,
+        // or a singular page.
+        else :
+            $where  = $this->options['locationSite'];
+        endif;
+
+        return $where;
     }
 
     /**
-    * THE SHARE BUTTONS FUNCTION:
+    * Prints the buttons to the page.
     *
     * This function accepts an array of parameters resulting in the outputting
     * of the Social Warfare Buttons.
@@ -38,6 +100,44 @@ class SWP_Buttons_Panel {
     * }
     * @return string $content   The modified content
     */
+
+    /**
+    * Run checks to verify this is the location for output.
+    *
+    * $checks is an array of conditions that all need to evaluate to false.
+    * If any one of them is true, we want to exit.
+    *
+    * @return mixed bool True if all checks pass, else string 'content'
+    */
+    protected function qualifies() {
+        $checks = array(
+            is_attachment(),
+            function_exists( 'is_buddypress' ) && is_buddypress(),
+            'none' === $this->data['where'] && !isset( $this->data['devs'] ),
+             !is_main_query() || !in_the_loop() && !isset( $array['devs'] ),
+            is_admin(),
+            is_feed(),
+            is_search(),
+            get_post_status( $this->data['postID'] ) !== 'publish',
+        );
+
+        $failure = array_search( true, $checks, true );
+
+        // *actually, we just want to return a boolean.
+        // *Let the calling function return ['content'] instead.
+        // such as
+        //     if ( ! $this->qualifies() ) return $this->data['content']
+
+        return !$failure;
+    }
+
+    protected function make_buttons() {
+        // *Part of the below function needs to be put in here.
+        // *Notably the sections that handle button data.
+        // *Sections that deal with button HTML can go in the_buttons().
+
+    }
+
     public function the_buttons( $array = array() ) {
         global $swp_user_options;
         $this->options = $swp_user_options;
@@ -154,7 +254,7 @@ class SWP_Buttons_Panel {
     			// Pass the swp_options into the array so we can pass it into the filter
     			$buttons_array['options'] = $this->options;
 
-    			// Customize which buttosn we're going to display
+    			// Customize which buttons are displayed.
     			if ( isset( $array['buttons'] ) ) :
 
     				// Fetch the global names and keys
