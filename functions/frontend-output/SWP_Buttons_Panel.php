@@ -12,12 +12,18 @@
 class SWP_Buttons_Panel {
     public $data;
 
-    public function __construct( $data ) {
+    public function __construct(  ) {
+
+		// This should never be instantiated until the theme is being rendered or the content
+		// is being filtered.
+
+		global $SWP_User_Options;
+
         // *$this->options can not be set to $swp_user_options yet
         // *as the options are not defined at this point.
 
-        if ( !is_array( $data ) ) {
-    		$data = array();
+        if ( !is_array( $user_options ) ) {
+    		$user_options = array();
     	}
 
         $defaults = array(
@@ -26,13 +32,14 @@ class SWP_Buttons_Panel {
             'content'   => false,
         );
 
-        if ( !isset($data['where'] ) {
-            $data['where'] = $this->set_where();
+        if ( !isset($user_options['where'] ) {
+            $user_options['where'] = $this->set_where();
         }
 
-        $this->data = array_merge( $defaults, $data );
-        $this->post_id = isset( $data['postID'] ) ? $data['postID'] : get_the_ID();
+        $this->data = array_merge( $defaults, $user_options );
+        $this->post_id = isset( $user_options['postID'] ) ? $user_options['postID'] : get_the_ID();
         $this->post_type = get_post_type( $this->post_id );
+        $this->content = $user_options['content'];
 
         // *Set specifications based on user settings or default values.
 
@@ -45,38 +52,208 @@ class SWP_Buttons_Panel {
             ),
         );
 
+        if ($this->qualifies) {
+            $this->the_buttons();
+        }
     }
 
-    private function set_where( $where ) {
+    /**
+     * Set the placement of floating buttons.
+     *
+     * @param string $float The float location. Accepted values are:
+     *                      left, right, top, bottom
+     * @return mixed
+     */
+    public function set_float( $float ) {
+        $previous =  get_post_meta( $post_id, 'nc_floatLocation', true );
+        $options = ['left', 'right', 'top', 'bottom'];
+
+        if ( isset( $float ) ) {
+            $float = strtolower( $float );
+            if ( in_array( $float, $options) ) {
+                $this->float = $float;
+                return $previous;
+            }
+        }
+
+        if ( !isset( $this->user_options['float'] ) ) {
+            $this->float = 'floatNone';
+            return $previous;
+        }
+
+        $specified_float_where = get_post_meta( $this->post_id , 'nc_floatLocation' , true );
+
+        if ( $specified_float_where === 'off' && $this->user_options['buttonFloat'] !== 'float_ignore' ) {
+            $this->float = 'floatNone';
+            return $previous;
+        }
+
+        if ( is_singular() && $this->user_options['float_location_' . $this->post_type] === 'on' ) {
+            $this->float = 'float' . ucfirt( $this->user_options['floatOption'] );
+            return $previous;
+        }
+
+
+        return false;
+    }
+
+    protected function set_scale( $scale ) {
+
+    }
+
+    protected function set_stats() {
+
+    }
+
+    /**
+     *  Manually add a button to the button set.
+     *
+     * @TODO Create a list of valid options depending on core/pro.
+     * @TODO Verify user has capability to print selected button.
+     * @param [type] $network [description]
+     */
+    public function add_button( $network ) {
+        if ( !in_array($network, $this->button_set) ) {
+            array_push($this->button_set, $network);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Manually remove a button from the button set.
+     *
+     * @param  string $network The social network to remove from the buttons set.
+     * @return bool True if the element is found and removed, else false.
+     *
+     */
+    public function remove_button( $network ) {
+        $idx = array_search( $network, $this->button_set );
+
+        if ( $idx > -1 ) {
+            array_splice( $this->button_set, $idx, 1);
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function set_button_selection() {
+
+    }
+
+    protected function sort_buttons() {
+        // // Sort the buttons according to the user's preferences
+        // if ( isset( $buttons_array ) && isset( $buttons_array['buttons'] ) ) :
+        //     foreach ( $buttons_array['buttons'] as $key => $value ) :
+        //         if ( isset( $buttons_array['resource'][ $key ] ) ) :
+        //             $assets .= $buttons_array['resource'][ $key ];
+        //         endif;
+        //     endforeach;
+        // elseif ( $this->options['orderOfIconsSelect'] == 'manual' ) :
+        //     foreach ( $this->options['newOrderOfIcons'] as $key => $value ) :
+        //         if ( isset( $buttons_array['resource'][ $key ] ) ) :
+        //             $assets .= $buttons_array['resource'][ $key ];
+        //         endif;
+        //     endforeach;
+        // elseif ( $this->options['orderOfIconsSelect'] == 'dynamic' ) :
+        //     arsort( $buttons_array['shares'] );
+        //     foreach ( $buttons_array['shares'] as $thisIcon => $status ) :
+        //         if ( isset( $buttons_array['resource'][ $thisIcon ] ) ) :
+        //             $assets .= $buttons_array['resource'][ $thisIcon ];
+        //         endif;
+        //     endforeach;
+        // endif;
+    }
+
+    /**
+     *  Writes the HTML for printing the shares button.
+     *
+     * @param string $position The horizontal position of the shares button.
+     *               Available options: left, right
+     */
+    protected function set_shares_html( $position ) {
+        // // Create the Total Shares Box if it's on the right
+        // if ( ( $this->options['totes'] && $this->options['swTotesFormat'] != 'totesAltLeft' && $buttons_array['totes'] >= $this->options['minTotes'] && !isset( $buttons_array['buttons'] ) )
+        // || 	( $this->options['swTotesFormat'] != 'totesAltLeft' && isset( $buttons_array['buttons'] ) && isset( $buttons_array['buttons']['totes'] ) && $buttons_array['totes'] >= $this->options['minTotes'] ) ) :
+        //     ++$buttons_array['count'];
+        //     if ( $this->options['swTotesFormat'] == 'totes' ) :
+        //         $assets .= '<div class="nc_tweetContainer totes" data-id="' . $buttons_array['count'] . '" >';
+        //         $assets .= '<span class="swp_count">' . swp_kilomega( $buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span>';
+        //         $assets .= '</div>';
+        //     else :
+        //         $assets .= '<div class="nc_tweetContainer totes totesalt" data-id="' . $buttons_array['count'] . '" >';
+        //         $assets .= '<span class="swp_count"><span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span> ' . swp_kilomega( $buttons_array['totes'] ) . '</span>';
+        //         $assets .= '</div>';
+        //     endif;
+        // endif;
+        //
+		// // Close the Social Panel
+		// $assets .= '</div>';
+
+    }
+
+    protected function check_cache_timestamp() {
+        // if ( swp_is_cache_fresh( $post_id ) == false  && isset($this->options['cacheMethod']) && 'legacy' === $this->options['cacheMethod'] ) :
+
+    }
+
+    protected function reset_cache_timestamp() {
+        // Reset the cache timestamp if needed
+            // delete_post_meta( $post_id,'swp_cache_timestamp' );
+            // update_post_meta( $post_id,'swp_cache_timestamp',floor( ((date( 'U' ) / 60) / 60) ) );
+    }
+
+
+
+
+
+
+
+    /**
+    * Define where to place the buttons on the page.
+    *
+    * @param string $where
+    */
+
+    protected function set_where( $where ) {
+        $previous = $this->where;
+
+        if ( isset($where) ) {
+            $this->settings['where'] = $where;
+            return $previous;
+        }
+
         if( is_front_page() ):
             $where  = $this->options['locationHome'];
 
-        elseif ( is_singular() && !is_home() && !is_archive() ) :
-
+        else if ( is_singular() && !is_home() && !is_archive() ) :
             // Check to see if display location was specifically defined for this post
-            $spec_where = get_post_meta( $post_id, 'nc_postLocation', true );
+            $specified_where = get_post_meta( $post_id, 'nc_postLocation', true );
 
-            if ( !$spec_where ) {
-                $spec_where = 'default';
+            if ( !$specified_where ) {
+                $specified_where = 'default';
             };
 
-            if ( $spec_where == 'default' || $spec_where == '' ) :
+            if ( $specified_where == 'default' || $specified_where == '' ) :
                 if ( isset( $this->options[ 'location_' . $post_type ] ) ) :
                     $where  = $this->options[ 'location_' . $this->post_type ];
                 else :
                     $where  = 'none';
                 endif;
             else :
-                $where  = $spec_where;
+                $where  = $specified_where;
             endif;
 
         // If we are anywhere else besides the home page, front page,
         // or a singular page.
         else :
             $where  = $this->options['locationSite'];
+
         endif;
 
-        return $where;
+        return $previous;
     }
 
     /**
@@ -102,311 +279,76 @@ class SWP_Buttons_Panel {
     */
 
     /**
-    * Run checks to verify this is the location for output.
+    * Verify this is the location for output.
     *
     * $checks is an array of conditions that all need to evaluate to false.
-    * If any one of them is true, we want to exit.
+    * If any one of them is true, exit.
     *
-    * @return mixed bool True if all checks pass, else string 'content'
+    * @return bool
     */
-    protected function qualifies() {
-        $checks = array(
-            is_attachment(),
-            function_exists( 'is_buddypress' ) && is_buddypress(),
-            'none' === $this->data['where'] && !isset( $this->data['devs'] ),
-             !is_main_query() || !in_the_loop() && !isset( $array['devs'] ),
-            is_admin(),
-            is_feed(),
-            is_search(),
-            get_post_status( $this->data['postID'] ) !== 'publish',
-        );
+    protected function qualifies( $callables = array() ) {
 
-        $failure = array_search( true, $checks, true );
+        if ( !$this->check_qualifying_callables( $callables )
+          || !$this->check_qualifying_conditionals() ) {
+             return false;
+         }
 
-        // *actually, we just want to return a boolean.
-        // *Let the calling function return ['content'] instead.
-        // such as
-        //     if ( ! $this->qualifies() ) return $this->data['content']
-
-        return !$failure;
+         return true;
     }
 
-    protected function make_buttons() {
-        // *Part of the below function needs to be put in here.
-        // *Notably the sections that handle button data.
-        // *Sections that deal with button HTML can go in the_buttons().
+    /**
+    * Perform context checks before printing the buttons.
+    *
+    */
+    protected function check_qualifying_callables( $callables ) {
+        // *Functions which need to return false to pass.
+        $default_callables = array(
+            'is_attachment',
+            'is_admin',
+            'is_feed',
+            'is_search',
+
+        );
+
+        if ( !empty( $callables ) ) {
+            if ( is_callable( $callables ) ) {
+                array_push( $default_callables, $qualifiers );
+            } else if ( is_array( $callables ) ){
+                foreach( $callables as $callable ) {
+                   if ( is_callable( $callable ) ) {
+                       array_push( $default_callables, $callable);
+                   }
+               }
+            }
+        }
+
+        foreach ($default_callables as $callable) {
+            if ( call_user_func($callable)) {
+                return false;
+            };
+        }
+
+        return true;
+    }
+
+    /**
+    * Require conditions to be met for the buttons to be printed.
+    *
+    */
+    protected function check_qualifying_conditionals() {
+        if (function_exists( 'is_buddypress' ) && is_buddypress()
+            || 'none' === $this->data['where'] && !isset( $this->data['devs'] )
+            || !is_main_query() || !in_the_loop() && !isset( $array['devs'] )
+            || get_post_status( $this->data['postID'] ) !== 'publish'
+        ) {
+            return false;
+        }
+
+        return true;
 
     }
 
     public function the_buttons( $array = array() ) {
-        global $swp_user_options;
-        $this->options = $swp_user_options;
 
-    	if ( !is_array($array) ) {
-    		$array = array();
-    	}
-
-        $defaults = array(
-            'where'     => 'default',
-            'echo'      => true,
-            'content'   => false,
-        );
-
-        // *Set default array values.
-        $array = array_merge( $defaults, $array );
-
-    	// Get the options, or create them if they don't exist
-    	if ( isset( $array['postID'] ) ) :
-    		$post_id = $array['postID'];
-    	else :
-    		$post_id = get_the_ID();
-    	endif;
-
-    	// Check to see if display location was specifically defined for this post
-    	$spec_where = get_post_meta( $post_id, 'nc_postLocation', true );
-
-        if ( !$spec_where ) {
-            $spec_where = 'default';
-    	};
-
-    	if ( $array['where'] == 'default' ) :
-    		// If we are on the home page
-    		if( is_front_page() ):
-    			$array['where'] = $this->options['locationHome'];
-
-    		// If we are on a singular page
-    		elseif ( is_singular() && !is_home() && !is_archive() && !is_front_page() ) :
-    			if ( $spec_where == 'default' || $spec_where == '' ) :
-    				$post_type = get_post_type( $post_id );
-
-    				if ( isset( $this->options[ 'location_' . $post_type ] ) ) :
-    					$array['where'] = $this->options[ 'location_' . $post_type ];
-    				else :
-    					$array['where'] = 'none';
-    				endif;
-
-    			else :
-    				$array['where'] = $spec_where;
-    			endif;
-
-    		// If we are anywhere else besides the home page or a singular
-    		else :
-    			$array['where'] = $this->options['locationSite'];
-    		endif;
-    	endif;
-
-    	// *Do not show on attachement pages.
-    	if ( true === is_attachment() ) :
-    		return $array['content'];
-
-    	// Disable the buttons on Buddy Press pages
-    	elseif ( function_exists( 'is_buddypress' ) && is_buddypress() ) :
-    		return $array['content'];
-
-    	// Disable the buttons if the location is set to "None / Manual"
-    	elseif ( 'none' === $array['where'] && !isset( $array['devs'] ) ) :
-    		return $array['content'];
-
-    	// Disable the button if we're not in the loop, unless there is no content which means the function was called by a developer.
-    	elseif ( ( !is_main_query() || !in_the_loop()) && !isset( $array['devs'] ) ) :
-    		return $array['content'];
-
-    	// Don't do anything if we're in the admin section
-    	elseif ( is_admin() ) :
-    		return $array['content'];
-
-    	// If all the checks pass, let's make us some buttons!
-    	else :
-
-    		// Set the options for the horizontal floating bar
-    		$post_type = get_post_type( $post_id );
-    		$spec_float_where = get_post_meta( $post_id , 'nc_floatLocation' , true );
-
-    		if ( isset( $array['float'] ) && $array['float'] == 'ignore' ) :
-    			$floatOption = 'float_ignore';
-    		elseif ( $spec_float_where == 'off' && $this->options['buttonFloat'] != 'float_ignore' ) :
-    				$floatOption = 'floatNone';
-    		elseif ( $this->options['float'] && is_singular() && $this->options[ 'float_location_' . $post_type ] == 'on' ) :
-    			$floatOption = 'float' . ucfirst( $this->options['floatOption'] );
-    		else :
-    			$floatOption = 'floatNone';
-    		endif;
-
-    		// Disable the plugin on feeds, search results, and non-published content
-    		if ( !is_feed() && !is_search() && get_post_status( $post_id ) == 'publish' ) :
-
-    			// Acquire the social stats from the networks
-    			if ( isset( $array['url'] ) ) :
-    				$buttons_array['url'] = $array['url'];
-    			else :
-    				$buttons_array['url'] = get_permalink( $post_id );
-    			endif;
-
-    			if ( isset( $array['scale'] ) ) :
-    				$scale = $array['scale'];
-    			else :
-    				$scale = $this->options['buttonSize'];
-    			endif;
-
-    			// Fetch the share counts
-    			$buttons_array['shares'] = get_social_warfare_shares( $post_id );
-
-    			// Pass the swp_options into the array so we can pass it into the filter
-    			$buttons_array['options'] = $this->options;
-
-    			// Customize which buttons are displayed.
-    			if ( isset( $array['buttons'] ) ) :
-
-    				// Fetch the global names and keys
-    				$swp_options = array();
-    				$swp_available_options = apply_filters( 'swp_options', $swp_options );
-    				$available_buttons = $swp_available_options['options']['swp_display']['buttons']['content'];
-
-    				// Split the comma separated list into an array
-    				$button_set_array = explode( ',', $array['buttons'] );
-
-    				// Match the names in the list to their appropriate system-wide keys
-    				$i = 0;
-    				foreach ( $button_set_array as $button ) :
-
-    					// Trim the network name in case of white space
-    					$button = trim( $button );
-
-    					// Convert the names to their systme-wide keys
-    					if ( swp_recursive_array_search( $button , $available_buttons ) ) :
-    						$key = swp_recursive_array_search( $button , $available_buttons );
-
-    						// Store the result in the array that gets passed to the HTML generator
-    						$buttons_array['buttons'][ $key ] = $button;
-
-    						// Declare a default share count of zero. This will be overriden later
-    						if ( !isset( $buttons_array['shares'][ $key ] ) ) :
-    							$buttons_array['shares'][ $key ] = 0;
-    						endif;
-
-    					endif;
-
-    					$button_set_array[ $i ] = $button;
-    					++$i;
-    				endforeach;
-
-    				// Manually turn the total shares on or off
-    				if ( array_search( 'Total', $button_set_array ) ) :
-                        $buttons_array['buttons']['totes'] = 'Total';
-                    endif;
-
-    			endif;
-
-    			// Setup the buttons array to pass into the 'swp_network_buttons' hook
-    			$buttons_array['count'] = 0;
-    			$buttons_array['totes'] = 0;
-
-    			if ( ( $buttons_array['options']['totes'] && $buttons_array['shares']['totes'] >= $buttons_array['options']['minTotes'] && !isset( $array['buttons'] ) )
-    				|| 	( isset( $buttons_array['buttons'] ) && isset( $buttons_array['buttons']['totes'] ) && $buttons_array['totes'] >= $this->options['minTotes'] ) ) :
-    				++$buttons_array['count'];
-    			endif;
-
-    			$buttons_array['resource'] = array();
-    			$buttons_array['postID'] = $post_id;
-
-    			// Disable the subtitles plugin to avoid letting them inject their subtitle into our share titles
-    			if ( is_plugin_active( 'subtitles/subtitles.php' ) && class_exists( 'Subtitles' ) ) :
-    				remove_filter( 'the_title', array( Subtitles::getinstance(), 'the_subtitle' ), 10, 2 );
-    			endif;
-
-    			// This array will contain the HTML for all of the individual buttons
-    			$buttons_array = apply_filters( 'swp_network_buttons' , $buttons_array );
-
-    			// Create the social panel
-    			$assets = '<div class="nc_socialPanel swp_' . $this->options['visualTheme'] . ' swp_d_' . $this->options['dColorSet'] . ' swp_i_' . $this->options['iColorSet'] . ' swp_o_' . $this->options['oColorSet'] . ' scale-' . $scale*100 .' scale-' . $this->options['buttonFloat'] . '" data-position="' . $this->options['location_post'] . '" data-float="' . $floatOption . '" data-count="' . $buttons_array['count'] . '" data-floatColor="' . $this->options['floatBgColor'] . '" data-emphasize="'.$this->options['emphasize_icons'].'">';
-
-    			// Setup the total shares count if it's on the left
-    			if ( ( $this->options['totes'] && $this->options['swTotesFormat'] == 'totesAltLeft' && $buttons_array['totes'] >= $this->options['minTotes'] && !isset( $array['buttons'] ) || ( $this->options['swTotesFormat'] == 'totesAltLeft' && isset( $buttons_array['buttons'] ) && isset( $buttons_array['buttons']['totes'] ) && $buttons_array['totes'] >= $this->options['minTotes'] ))
-    			|| 	($this->options['swTotesFormat'] == 'totesAltLeft' && isset( $array['buttons'] ) && isset( $array['buttons']['totes'] ) && $buttons_array['totes'] >= $this->options['minTotes'] ) ) :
-    				++$buttons_array['count'];
-    				$assets .= '<div class="nc_tweetContainer totes totesalt" data-id="' . $buttons_array['count'] . '" >';
-    				$assets .= '<span class="swp_count">' . swp_kilomega( $buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span>';
-    				$assets .= '</div>';
-    			endif;
-
-    			// Sort the buttons according to the user's preferences
-    			if ( isset( $buttons_array ) && isset( $buttons_array['buttons'] ) ) :
-    				foreach ( $buttons_array['buttons'] as $key => $value ) :
-    					if ( isset( $buttons_array['resource'][ $key ] ) ) :
-    						$assets .= $buttons_array['resource'][ $key ];
-    					endif;
-    				endforeach;
-    			elseif ( $this->options['orderOfIconsSelect'] == 'manual' ) :
-    				foreach ( $this->options['newOrderOfIcons'] as $key => $value ) :
-    					if ( isset( $buttons_array['resource'][ $key ] ) ) :
-    						$assets .= $buttons_array['resource'][ $key ];
-    					endif;
-    				endforeach;
-    			elseif ( $this->options['orderOfIconsSelect'] == 'dynamic' ) :
-    				arsort( $buttons_array['shares'] );
-    				foreach ( $buttons_array['shares'] as $thisIcon => $status ) :
-    					if ( isset( $buttons_array['resource'][ $thisIcon ] ) ) :
-    						$assets .= $buttons_array['resource'][ $thisIcon ];
-    					endif;
-    				endforeach;
-    			endif;
-
-    			// Create the Total Shares Box if it's on the right
-    			if ( ( $this->options['totes'] && $this->options['swTotesFormat'] != 'totesAltLeft' && $buttons_array['totes'] >= $this->options['minTotes'] && !isset( $buttons_array['buttons'] ) )
-    			|| 	( $this->options['swTotesFormat'] != 'totesAltLeft' && isset( $buttons_array['buttons'] ) && isset( $buttons_array['buttons']['totes'] ) && $buttons_array['totes'] >= $this->options['minTotes'] ) ) :
-    				++$buttons_array['count'];
-    				if ( $this->options['swTotesFormat'] == 'totes' ) :
-    					$assets .= '<div class="nc_tweetContainer totes" data-id="' . $buttons_array['count'] . '" >';
-    					$assets .= '<span class="swp_count">' . swp_kilomega( $buttons_array['totes'] ) . ' <span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span></span>';
-    					$assets .= '</div>';
-    				else :
-    					$assets .= '<div class="nc_tweetContainer totes totesalt" data-id="' . $buttons_array['count'] . '" >';
-    					$assets .= '<span class="swp_count"><span class="swp_label">' . __( 'Shares','social-warfare' ) . '</span> ' . swp_kilomega( $buttons_array['totes'] ) . '</span>';
-    					$assets .= '</div>';
-    				endif;
-    			endif;
-
-    			// Close the Social Panel
-    			$assets .= '</div>';
-
-    			// Reset the cache timestamp if needed
-    			if ( swp_is_cache_fresh( $post_id ) == false  && isset($this->options['cacheMethod']) && 'legacy' === $this->options['cacheMethod'] ) :
-    				delete_post_meta( $post_id,'swp_cache_timestamp' );
-    				update_post_meta( $post_id,'swp_cache_timestamp',floor( ((date( 'U' ) / 60) / 60) ) );
-    			endif;
-
-    			if ( isset( $array['genesis'] ) ) :
-    				if ( $array['where'] == 'below' && $array['genesis'] == 'below' ) :
-    					return $assets;
-    				elseif ( $array['where'] == 'above' && $array['genesis'] == 'above' ) :
-    					return $assets;
-    				elseif ( $array['where'] == 'both' ) :
-    					return $assets;
-    				elseif ( $array['where'] == 'none' ) :
-    					return false;
-    				endif;
-    			else :
-    				if ( $array['echo'] == false && $array['where'] != 'none' ) :
-    					return $assets;
-    				elseif ( $array['content'] === false ) :
-    					echo $assets;
-    				elseif ( isset( $array['where'] ) && $array['where'] == 'below' ) :
-    					$content = $array['content'] . '' . $assets;
-    					return $content;
-    				elseif ( isset( $array['where'] ) && $array['where'] == 'above' ) :
-    					$content = $assets . '' . $array['content'];
-    					return $content;
-    				elseif ( isset( $array['where'] ) && $array['where'] == 'both' ) :
-    					$content = $assets . '' . $array['content'] . '' . $assets;
-    					return $content;
-    				elseif ( isset( $array['where'] ) && $array['where'] == 'none' ) :
-    					return $array['content'];
-    				endif;
-    			endif;
-    		else :
-    			return $array['content'];
-    		endif;
-
-    	endif;
     }
 }
